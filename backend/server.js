@@ -6,6 +6,7 @@ import {v2 as cloudinary} from 'cloudinary';
 import authRoutes from './routes/auth.route.js';
 import userRoutes from './routes/user.route.js';
 import postRoutes from './routes/post.route.js';
+import notificationRoutes from './routes/notification.route.js';
 import connectMongoDB from './db/connectMongoDB.js';
 
 dotenv.config()
@@ -17,18 +18,19 @@ cloudinary.config({
 
 
 const app = express();
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
-app.use(express.urlencoded({ extended:true }))
+app.use(express.urlencoded({ extended:true }));
 app.use(cookieParser());
 
 
-app.use("/api/auth", authRoutes)
-app.use("/api/users", userRoutes)
-app.use("/api/post", postRoutes)
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/post", postRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.listen(PORT, ()=>{
     console.log(`server is running on port http://localhost:${PORT}/`);
-    connectMongoDB()
-})
+    connectMongoDB();
+});
