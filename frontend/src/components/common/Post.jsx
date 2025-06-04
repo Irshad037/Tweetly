@@ -35,12 +35,12 @@ const Post = ({ post }) => {
 				if (!res.ok) {
 					throw new Error(data.error || "Something went wrong!");
 				}
-				return;
+				return data;
 			} catch (error) {
 				throw new Error(error.message);
 			}
 		},
-		onSuccess: (updatedLikes) => {
+		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["posts"] })
 		},
 		onError: (error) => {
@@ -58,12 +58,12 @@ const Post = ({ post }) => {
 				if (!res.ok) {
 					throw new Error(data.error || "Something went wrong!");
 				}
-				return;
+				return data;
 			} catch (error) {
 				throw new Error(error.message);
 			}
 		},
-		onSuccess: (updatedLikes) => {
+		onSuccess: () => {
 			setComment("");
 			queryClient.invalidateQueries({ queryKey: ["posts"] });
 		},
