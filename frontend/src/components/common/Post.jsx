@@ -16,6 +16,7 @@ const Post = ({ post }) => {
 	const { data: authUser } = useQuery({ queryKey: ["authUser"] });
 	const postOwner = post.user;
 	const isLiked = post.likes.includes(authUser._id);
+	const isSaved = post.saves.includes(authUser._id);
 	const isMyPost = authUser._id === post.user._id;
 	const formattedDate = formatPostDate(post.createdAt);
 
@@ -25,10 +26,10 @@ const Post = ({ post }) => {
 			try {
 				const res = await fetch(`/api/posts/comment/${post._id}`, {
 					method: "POST",
-					headers:{
+					headers: {
 						"Content-Type": "application/json",
 					},
-					body:JSON.stringify({text:comment})
+					body: JSON.stringify({ text: comment })
 				});
 
 				const data = await res.json();
@@ -64,7 +65,29 @@ const Post = ({ post }) => {
 			}
 		},
 		onSuccess: () => {
-			setComment("");
+			queryClient.invalidateQueries({ queryKey: ["posts"] });
+		},
+		onError: (error) => {
+			toast.error(error.message);
+		},
+	});
+	const { mutate: savePost, isPending: isSaving } = useMutation({
+		mutationFn: async () => {
+			try {
+				const res = await fetch(`/api/posts/save/${post._id}`, {
+					method: "POST",
+				});
+
+				const data = await res.json();
+				if (!res.ok) {
+					throw new Error(data.error || "Something went wrong!");
+				}
+				return data;
+			} catch (error) {
+				throw new Error(error.message);
+			}
+		},
+		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["posts"] });
 		},
 		onError: (error) => {
@@ -106,6 +129,10 @@ const Post = ({ post }) => {
 		if (isliking) return;
 		likePost();
 	};
+	const handleSavePost = () => {
+		if (isSaving) return;
+		savePost();
+	};
 
 	return (
 		<>
@@ -129,7 +156,7 @@ const Post = ({ post }) => {
 							<span className='flex justify-end flex-1'>
 								{!isDeleting && (
 									<FaTrash className='cursor-pointer hover:text-red-500'
-									onClick={handleDeletePost} />
+										onClick={handleDeletePost} />
 								)}
 								{isDeleting && (
 									<LoadingSpinner size="sm" />
@@ -217,11 +244,11 @@ const Post = ({ post }) => {
 								<span className='text-sm text-slate-500 group-hover:text-green-500'>0</span>
 							</div>
 							<div className='flex gap-1 items-center group cursor-pointer' onClick={handleLikePost}>
-								{isliking && <LoadingSpinner size="sm"/>}
-								{!isLiked && ! isliking && (
+								{isliking && <LoadingSpinner size="sm" />}
+								{!isLiked && !isliking && (
 									<FaRegHeart className='w-4 h-4 cursor-pointer text-slate-500 group-hover:text-pink-500' />
 								)}
-								{isLiked && ! isliking && <FaRegHeart className='w-4 h-4 cursor-pointer text-pink-500 ' />}
+								{isLiked && !isliking && <FaRegHeart className='w-4 h-4 cursor-pointer text-pink-500 ' />}
 
 								<span
 									className={`text-sm  group-hover:text-pink-500 ${isLiked ? "text-pink-500" : "text-slate-500"
@@ -231,8 +258,18 @@ const Post = ({ post }) => {
 								</span>
 							</div>
 						</div>
-						<div className='flex w-1/3 justify-end gap-2 items-center'>
-							<FaRegBookmark className='w-4 h-4 text-slate-500 cursor-pointer' />
+						<div className='flex w-1/3 justify-end gap-2 items-center' onClick={handleSavePost}>
+							{isSaving && <LoadingSpinner size="sm" />}
+							{!isSaved && !isSaving && (
+								<FaRegBookmark className='w-4 h-4 cursor-pointer text-slate-500  group-hover:text-white' />
+							)}
+							{isSaved && !isSaving && <FaRegBookmark className='w-4 h-4 text-white cursor-pointer' />}
+							<span
+								className={`text-sm  group-hover:text-white ${isLiked ? "text-white" : "text-slate-500"
+									}`}
+							>
+								{post.saves.length}
+							</span>
 						</div>
 					</div>
 				</div>
