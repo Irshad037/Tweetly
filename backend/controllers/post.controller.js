@@ -204,6 +204,29 @@ export const getLikedPosts = async (req,res)=>{
     
     }
 }
+export const getSavedPosts = async (req,res)=>{
+    const userId = req.params.id;
+    try {
+        const user = await User.findById(userId);
+        if(!user)return res.status(404).json({error:"User not found"})
+
+        const savedPosts = await Post.find({_id:{$in: user.savedPosts}})
+        .populate({
+            path:"user",
+            select:"-password"
+        })
+        .populate({
+            path:"comments.user",
+            select:"-password"
+        });
+        
+        res.status(200).json(savedPosts)
+    } catch (error) {
+        console.error("Error in getLikedPosts controller:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    
+    }
+}
 
 export const getFollowingPosts =  async (req, res)=>{
     try {
