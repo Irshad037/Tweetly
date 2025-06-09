@@ -126,6 +126,36 @@ export const likeUnlikePost = async (req, res) => {
         res.status(500).json({ error: "Internal Server Error" });
     }
 };
+export const saveUnsavePost = async (req, res) => {
+    try {
+        const userId = req.user._id.toString();
+        const { id: postId } = req.params;
+
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({ error: "Post not found" });
+        }
+
+        const userSavePost = post.saves.includes(userId);
+
+        if (userSavePost) {
+            post.saves = post.saves.filter(id => id.toString() !== userId);
+            await post.save();
+            await User.updateOne({_id:userId}, {$pull:{savedPosts:postId}})
+            
+            return res.status(200).json({ message: "Post unsaved successfully" });
+        } else {
+            post.saves.push(userId);
+            await post.save()
+            await User.updateOne({_id:userId}, {$push:{savedPosts:postId}})
+
+            res.status(200).json({message: "Post saved successfully"})
+        }
+    } catch (error) {
+        console.error("Error in saveUnsavePost controller:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
 
 export const getAllPosts = async (req,res)=>{
     try {
