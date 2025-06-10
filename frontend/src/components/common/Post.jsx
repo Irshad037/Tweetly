@@ -18,6 +18,7 @@ const Post = ({ post }) => {
 	const isLiked = post.likes.includes(authUser._id);
 	const isSaved = post.saves.includes(authUser._id);
 	const isMyPost = authUser._id === post.user._id;
+
 	const formattedDate = formatPostDate(post.createdAt);
 
 
@@ -95,6 +96,53 @@ const Post = ({ post }) => {
 		},
 	});
 
+	const { mutate: deleteComment, isPending: isCommentDeleting } = useMutation({
+		mutationFn: async ({ commentId }) => {
+			try {
+				const res = await fetch(`/api/posts/${post._id}/comments/${commentId}`, {
+					method: "DELETE",
+				});
+				const data = await res.json();
+
+				if (!res.ok) throw new Error(data.error || "Something went wrong while deleting the comment.");
+
+				return commentId; // Return the deleted comment's ID
+			} catch (error) {
+				throw new Error(error.message || "An unexpected error occurred.");
+			}
+		},
+		onMutate: async ({ commentId }) => {
+			// Cancel ongoing queries for "posts"
+			await queryClient.cancelQueries({ queryKey: ["posts"] });
+
+			// Snapshot the previous state
+			const previousPosts = queryClient.getQueryData(["posts"]);
+
+			// Optimistically update the cache
+			queryClient.setQueryData(["posts"], (oldData) => {
+				return oldData.map((post) =>
+					post._id === post._id
+						? {
+							...post,
+							comments: post.comments.filter((comment) => comment._id !== commentId),
+						}
+						: post
+				);
+			});
+
+			// Return a rollback function
+			return { previousPosts };
+		},
+		onError: (error, variables, context) => {
+			// Roll back to the previous state
+			queryClient.setQueryData(["posts"], context.previousPosts);
+			toast.error(error.message);
+		},
+		onSuccess: () => {
+			toast.success("Comment deleted successfully");
+		},
+	});
+
 	const { mutate: deletePost, isPending: isDeleting } = useMutation({
 		mutationFn: async () => {
 			try {
@@ -116,7 +164,15 @@ const Post = ({ post }) => {
 	})
 
 	const handleDeletePost = () => {
-		deletePost();
+		if (window.confirm("Are you sure you want to delete this post?")) {
+			deletePost();
+		}
+	};
+
+	const handleDeleteComment = (commentId) => {
+		if (window.confirm("Are you sure you want to delete this comment?")) {
+			deleteComment({ commentId });
+		}
 	};
 
 	const handlePostComment = (e) => {
@@ -213,6 +269,19 @@ const Post = ({ post }) => {
 													</div>
 													<div className='text-sm'>{comment.text}</div>
 												</div>
+
+												{authUser._id === comment.user._id && (
+													<span className='flex justify-end flex-1'>
+														{!isCommentDeleting && (
+															<FaTrash className='cursor-pointer hover:text-red-500'
+																onClick={() => handleDeleteComment(comment._id)} />
+														)}
+														{isCommentDeleting && (
+															<LoadingSpinner size="sm" />
+														)}
+
+													</span>
+												)}
 											</div>
 										))}
 									</div>

@@ -36,7 +36,7 @@ function App() {
 
   if(isLoading){
     return(
-      <div className="h-screen flex items-center justify-center">
+      <div className="h-screen flex items-center justify-center" data-theme = "dark">
         <LoadingSpinner size="lg"/>
       </div>
     )
