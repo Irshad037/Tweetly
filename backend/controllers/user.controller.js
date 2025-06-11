@@ -98,6 +98,41 @@ export const getSuggestedUsers = async (req, res) => {
     }
 }
 
+export const getFollowingUsers = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        const user = await User.findById(userId).select("following").lean();
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        res.status(200).json(user.following);
+    } catch (error) {
+        console.error("Error in getFollowingUsers:", error.message);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
+
+export const getFollowerUsers = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        const user = await User.findById(userId).select("followers").lean();
+
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        res.status(200).json(user.followers);
+    } catch (error) {
+        console.error("Error in getFollowerUsers:", error.message);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+}
+
 export const updateUser= async (req, res) => {
     const {fullName, email, username,currentPassword, newPassword, bio, link}= req.body;
     let{profileImg , coverImg} = req.body;

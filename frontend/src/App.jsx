@@ -6,6 +6,7 @@ import Sidebar from "./components/common/Sidebar";
 import RightPanel from "./components/common/RightPanel";
 import NotificationPage from "./pages/notification/NotificationPage";
 import ProfilePage from "./pages/profile/ProfilePage";
+import ConnectionsPage from "./pages/connection/ConnectionsPage";
 
 import { Toaster }from 'react-hot-toast'
 import { useQuery } from "@tanstack/react-query";
@@ -51,6 +52,7 @@ function App() {
         <Route path="/signup" element={!authUser?<SignUpPage/>:<Navigate to="/"/>}/>
         <Route path="/notifications" element={authUser?<NotificationPage/>:<Navigate to="/login"/>}/>
         <Route path="/profile/:username" element={authUser?<ProfilePage/>:<Navigate to="/login"/>}/>
+        <Route path="/profile/:username/connections" element={authUser?<ConnectionsPage/>:<Navigate to="/login"/>}/>
       </Routes>
       {authUser && <RightPanel/>}
       <Toaster/>
