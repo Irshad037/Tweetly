@@ -73,6 +73,7 @@ const RightPanel = () => {
 										{isPending ? <LoadingSpinner size='sm' /> : "Follow"}
 									</button>
 								</div>
+								
 							</Link>
 						))}
 				</div>
