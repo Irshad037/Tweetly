@@ -17,6 +17,7 @@ import { formatMemberSinceDate } from "../../utils/date";
 
 import useFollow from "../../components/hooks/useFollow";
 import useUpdateUserProfile from "../../components/hooks/useUpdateUserProfile";
+import ConnectionsPage from "../connection/ConnectionsPage";
 
 const ProfilePage = () => {
 	const [coverImg, setCoverImg] = useState(null);
@@ -195,13 +196,13 @@ const ProfilePage = () => {
 								<div className='flex gap-2'>
 									<div className='flex gap-1 items-center'>
 										<span className='font-bold text-xs'>{user?.following.length}</span>
-										<Link to={`/profile/${authUser?.username}/connections`}>
+										<Link to={`/profile/${username}/connections`}>
 											<span className='text-slate-500 text-xs hover:border-b-2'>Following</span>
 										</Link>
 									</div>
 									<div className='flex gap-1 items-center'>
 										<span className='font-bold text-xs'>{user?.followers.length}</span>
-										<Link to={`/profile/${authUser?.username}/connections`}>
+										<Link to={`/profile/${username}/connections`}>
 											<span className='text-slate-500 text-xs hover:border-b-2'>Followers</span>
 										</Link>
 									</div>
@@ -226,20 +227,24 @@ const ProfilePage = () => {
 										<div className='absolute bottom-0 w-10  h-1 rounded-full bg-primary' />
 									)}
 								</div>
-								<div
-									className='flex justify-center flex-1 p-3 text-slate-500 hover:bg-secondary transition duration-300 relative cursor-pointer'
-									onClick={() => setFeedType("saves")}
-								>
-									Saves
-									{feedType === "saves" && (
-										<div className='absolute bottom-0 w-10  h-1 rounded-full bg-primary' />
-									)}
-								</div>
+								{isMyProfile &&
+									<div
+										className='flex justify-center flex-1 p-3 text-slate-500 hover:bg-secondary transition duration-300 relative cursor-pointer'
+										onClick={() => setFeedType("saves")}
+									>
+										Saves
+										{feedType === "saves" && (
+											<div className='absolute bottom-0 w-10  h-1 rounded-full bg-primary' />
+										)}
+									</div>
+								}
 							</div>
 						</>
 					)}
 
 					<Posts feedType={feedType} username={username} userId={user?._id} />
+
+
 				</div>
 			</div>
 		</>

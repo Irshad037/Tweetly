@@ -20,7 +20,6 @@ export const getUserProfile = async (req, res) => {
     }
 };
 
-
 export const followUnfollowUser = async (req, res) => {
     try {
         const { id } = req.params;
@@ -71,6 +70,41 @@ export const followUnfollowUser = async (req, res) => {
     }
 };
 
+export const removeUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (id === req.user._id.toString()) {
+            return res.status(400).json({ error: "You can't remove yourself" });
+        }
+
+        
+        
+        const userToModify = await User.findById(id);
+        const currentUser = await User.findById(req.user._id);
+        
+        if (!userToModify || !currentUser) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        const isFollower= currentUser.followers.includes(id);
+
+        if (isFollower) {
+            // remove
+            await User.findByIdAndUpdate(req.user._id, {
+                $pull: { followers: id },
+            });
+            await User.findByIdAndUpdate(id, {
+                $pull: { following: req.user._id },
+            });
+        } 
+        return res.status(200).json({ message: "User removed successfully" });
+    } catch (error) {
+        console.error("Error in followUnfollowUser:", error.message);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+};
+
 export const getSuggestedUsers = async (req, res) => {
     try {
         const userId = req.user._id;
@@ -100,9 +134,12 @@ export const getSuggestedUsers = async (req, res) => {
 
 export const getFollowingUsers = async (req, res) => {
     try {
-        const userId = req.user._id;
+        const { username } = req.params;
 
-        const user = await User.findById(userId).select("following").lean();
+        const user = await User.findOne({ username })
+            .select("following")
+            .populate("following", "username fullName profileImg")
+            .lean();
 
         if (!user) {
             return res.status(404).json({ error: "User not found" });
@@ -116,11 +153,15 @@ export const getFollowingUsers = async (req, res) => {
 };
 
 
+
 export const getFollowerUsers = async (req, res) => {
     try {
-        const userId = req.user._id;
-
-        const user = await User.findById(userId).select("followers").lean();
+        const { username } = req.params;
+        
+        const user = await User.findOne({ username })
+        .select("followers")
+        .populate("followers","username fullName profileImg")
+        .lean();
 
         if (!user) {
             return res.status(404).json({ error: "User not found" });

@@ -23,7 +23,7 @@ const RightPanel = () => {
 			}
 		},
 	});
-
+	
 	const { follow, isPending } = useFollow();
 
 	if (suggestedUsers?.length === 0) return <div className='md:w-64 w-0'></div>;
