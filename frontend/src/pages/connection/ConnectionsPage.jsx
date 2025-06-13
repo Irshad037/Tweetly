@@ -2,14 +2,16 @@ import React, { useState } from "react";
 import ConnectionSkeleton from "../../components/skeletons/ConnectionSkeleton";
 import { FaArrowLeftLong } from "react-icons/fa6";
 import { Link, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { USERS_FOR_RIGHT_PANEL } from "../../utils/db/dummy";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import useFollow from "../../components/hooks/useFollow";
+import toast from "react-hot-toast";
+import LoadingSpinner from "../../components/common/LoadingSpinner";
 
 const ConnectionsPage = () => {
   const [connectionType, setConnectionType] = useState("followers");
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
   const { username } = useParams();
+  const queryClient = useQueryClient();
 
   const {
     data: userinfo,
@@ -61,11 +63,39 @@ const ConnectionsPage = () => {
     },
   });
 
+  const { mutate: removeUser, isPending: isRemoving } = useMutation({
+    mutationFn: async (userId) => {
+      try {
+        const res = await fetch(`/api/users/removefollower/${userId}`, {
+          method: "POST",
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Something went wrong!");
+        }
+        return;
+      } catch (error) {
+        throw new Error(error.message);
+      }
+    },
+    onSuccess: () => {
+      toast.success("user removed successfully")
+      queryClient.invalidateQueries({ queryKey: ["userFollwers"] });
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+
   const { follow, isPending } = useFollow();
 
   const checkFollowing = (userId) => {
     return authUser?.following?.includes(userId);
   };
+
+
 
 
 
@@ -179,16 +209,23 @@ const ConnectionsPage = () => {
                     className="btn w-28 bg-white text-black hover:bg-white hover:opacity-90 rounded-full btn-md"
                     onClick={(e) => {
                       e.preventDefault(); // Prevent the link navigation
-                      follow(user?._id);
+
+                      if (authUser._id == userinfo._id) {
+                        removeUser(user._id);
+
+                      } else {
+                        follow(user?._id);
+                      }
                     }}
                   >
                     {authUser._id === userinfo._id
                       ? "Remove" // Show "Remove" when viewing own connections
-                      : isPending
-                        ? "Loading..."
-                        : checkFollowing(user?._id)
-                          ? "Unfollow"
-                          : "Follow"}
+                      : isRemoving ? <LoadingSpinner size="md" />
+                        : isPending
+                          ? "Loading..."
+                          : checkFollowing(user?._id)
+                            ? "Unfollow"
+                            : "Follow"}
                   </button>
 
                 </div>

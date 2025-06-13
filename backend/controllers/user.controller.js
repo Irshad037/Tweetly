@@ -98,6 +98,9 @@ export const removeUser = async (req, res) => {
                 $pull: { following: req.user._id },
             });
         } 
+        else{
+            return res.status(404).json({ message: "User Not Found" });
+        }
         return res.status(200).json({ message: "User removed successfully" });
     } catch (error) {
         console.error("Error in followUnfollowUser:", error.message);
